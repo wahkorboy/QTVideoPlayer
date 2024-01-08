@@ -15,6 +15,7 @@ SOURCES += \
     filemanager.cpp \
     main.cpp \
     mainwindow.cpp \
+    playerwindow.cpp \
     qvlc.cpp \
     qvlccore.cpp \
     qvlcplayer.cpp \
@@ -23,13 +24,15 @@ SOURCES += \
 HEADERS += \
     filemanager.h \
     mainwindow.h \
+    playerwindow.h \
     qvlc.h \
     qvlccore.h \
     qvlcplayer.h \
     repeatmode.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    playerwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
