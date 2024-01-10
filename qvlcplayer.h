@@ -13,6 +13,8 @@ public:
     void stop();
     void next();
     void prev();
+    void seekPrev(int delta=1000);
+    void seekNext(int delta=1000);
     void playAt(int index);
     void addMedia(const QString &media);
     void setVideoWidget(QWidget *videoWidget);
@@ -20,6 +22,7 @@ public:
     void setPosition(int position);
     int currentPosition() const;
     int currentIndex() const;
+    void removeMediaAt(int index);
     libvlc_state_t currentState() const;
     libvlc_time_t currentDuration() const;
     void clearPlaylist();

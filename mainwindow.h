@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 #include <QMouseEvent>
 #include <QFileInfo>
+#include<QListWidgetItem>
 
 
 #include <QMainWindow>
@@ -27,9 +28,10 @@ protected:
     void closeEvent(QCloseEvent *event);
     void handleVideoDoubleClick(QMouseEvent *event);
     bool eventFilter(QObject *obj, QEvent *event);
+    void keyPressEvent(QKeyEvent *event) override;
 private slots:
 
-
+    void playlistItemDoubleClicked(QListWidgetItem *item);
 
     void on_actionClose_triggered();
 
@@ -65,9 +67,15 @@ private slots:
     void on_volumeSlider_valueChanged(int value);
 
 
-    void on_positionSlider_valueChanged(int value);
+
+    void on_actionplaylist_triggered();
+
+    void on_seekPrevButton_clicked();
+
+    void on_seekNextButton_clicked();
 
 private:
+    void deletePressed();
     Ui::MainWindow *ui;
     void toggleFullscreen(QWidget *);
     bool isWidgetFullscreen=false;
@@ -82,5 +90,6 @@ private:
     void getPlaylist(QString path);
     void handleMusicEnd();
     int currentPosition=-1;
+    void setPlaylist(QString path);
 };
 #endif // MAINWINDOW_H

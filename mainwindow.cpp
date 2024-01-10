@@ -13,12 +13,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     // Assuming ui->widgetVideo is an instance of MyWidget
-    ui->widgetVideo->installEventFilter(this);
-    originalGeomitry=ui->widgetVideo->geometry();
-    originalParent=ui->widgetVideo->parentWidget();
     mMediaPlayer =new QVlcPlayer(this);
     repeatmode = new RepeatMode();
     initial=repeatmode;
+    ui->widgetVideo->installEventFilter(this);
     ui->repeatButton->setText(repeatmode->getRepeatMode());
     ui->shuffleButton->setText(repeatmode->getShuffleMode());
     ui->volumeSlider->setValue(initial->getInitialVolume());
@@ -57,13 +55,15 @@ MainWindow::MainWindow(QWidget *parent)
         ui->positionSlider->setMaximum(duration);
         });
     getPlaylist(initial->getDefaultPlaylist());
+    connect(ui->playlistWidget, &QListWidget::itemDoubleClicked, this, &MainWindow::playlistItemDoubleClicked);
+
 
 }
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
+    //qDebug()<<"Evetn"<<event->type();
     if (obj == ui->widgetVideo && event->type() == QEvent::MouseButtonDblClick)
     {
-        qDebug() << "Double click";
         toggleFullscreen(ui->widgetVideo);
         return true;  // Event handled
     }else if(obj == ui->widgetVideo && event->type() == QEvent::KeyPress){
@@ -71,12 +71,38 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         if(keyEvent->key()==Qt::Key_Escape && this->isWidgetFullscreen){
             toggleFullscreen(ui->widgetVideo);
-            qDebug()<<"esc";
         }
     }
 
+
     // Pass the event to the base class
     return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+if(    event->key() == Qt::Key_Delete){
+
+        deletePressed();
+}
+
+}
+
+void MainWindow::playlistItemDoubleClicked(QListWidgetItem *item)
+{
+    qDebug()<<"item double click";
+    // Add your logic here, for example, play the selected item
+    int index = ui->playlistWidget->row(item);
+    mMediaPlayer->playAt(index);
+}
+
+void MainWindow::deletePressed()
+{
+    QListWidgetItem* currentItem=ui->playlistWidget->currentItem();
+    if(!currentItem) return;
+    int currentIndex=ui->playlistWidget->row(currentItem);
+    mMediaPlayer->removeMediaAt(currentIndex);
+    ui->playlistWidget->takeItem(currentIndex);
 }
 
 MainWindow::~MainWindow()
@@ -94,10 +120,16 @@ void MainWindow::autoplay(int argc,char *argv[])
     on_clearPlaylistButton_clicked();
     if(argc<1) return;
     QString filePath=QString::fromLocal8Bit(argv[1]);
-    mMediaPlayer->addMedia(filePath);
-    ui->playlistWidget->addItem(filePath);
-    mMediaPlayer->playAt(0);
-    mMediaPlayer->play();
+    if(filePath.endsWith("irl")){
+        qDebug()<<"irl file"<<filePath;
+        setPlaylist(filePath);
+    }else{
+        mMediaPlayer->addMedia(filePath);
+        ui->playlistWidget->addItem(filePath);
+        mMediaPlayer->playAt(0);
+        mMediaPlayer->play();
+
+    }
 }
 
 
@@ -117,13 +149,13 @@ void MainWindow::toggleFullscreen(QWidget *widget)
     if (this->isWidgetFullscreen==false) {
         // If the widget is already in fullscreen, exit fullscreen mode
         //ui->widgetVideo->hide();
-        ui->widgetVideo->setGeometry(originalGeomitry);
-        ui->widgetVideo->setParent(originalParent);  // Set the parent to hrcontainer
-        ui->widgetVideo->showNormal();
+        widget->showNormal();
+        ui->hrcontainer->addWidget(widget);
+        //ui->widgetVideo->setParent(ui->hrcontainer);  // Set the parent to hrcontainer
     } else {
         // If the widget is not in fullscreen, enter fullscreen mode
-        ui->widgetVideo->setParent(nullptr);  // Remove the parent, making it a standalone window
-        ui->widgetVideo->showFullScreen();
+        widget->setParent(nullptr);  // Remove the parent, making it a standalone window
+        widget->showFullScreen();
     }
 }
 
@@ -143,6 +175,7 @@ void MainWindow::on_actionAdd_triggered()
 
 void MainWindow::on_playlistWidget_clicked(const QModelIndex &index)
 {
+    return;
     mMediaPlayer->playAt(index.row());
 }
 
@@ -281,14 +314,18 @@ void MainWindow::on_openPlaylistButton_clicked()
     QStringList filters;
     filters << "*.irl"; // Add other filters if needed
     QString path = QFileDialog::getOpenFileName(this, "Open IRL File", initial->getPlaylistPath(), filters.join(";"));
+    setPlaylist(path);
+
+}
+void MainWindow::setPlaylist(QString path){
     if(!QFile::exists(path)) return;
     QFileInfo file(path);
     QString playlistPath=file.absoluteFilePath();
     initial->setPlaylistPath(playlistPath);
     getPlaylist(path);
     savePlaylist(initial->getDefaultPlaylist());
-}
 
+}
 void MainWindow::handleMusicEnd(){
     int index=ui->playlistWidget->currentRow();
     QStringList files;
@@ -323,13 +360,24 @@ void MainWindow::on_volumeSlider_valueChanged(int value)
 
 
 
-void MainWindow::on_positionSlider_valueChanged(int value)
+
+void MainWindow::on_actionplaylist_triggered()
 {
-    if(currentPosition<0)return;
-    int delta=currentPosition-value;
-    delta= delta*delta;
-    if(delta<15000000) return;
-    ui->shuffleButton->setText(QString::fromStdString(std::to_string(delta)));
-    mMediaPlayer->setPosition(value);
+    if(ui->playlistframe->isHidden())
+        ui->playlistframe->show();
+    else
+            ui->playlistframe->hide();
+}
+
+
+void MainWindow::on_seekPrevButton_clicked()
+{
+    mMediaPlayer->seekPrev();
+}
+
+
+void MainWindow::on_seekNextButton_clicked()
+{
+    mMediaPlayer->seekNext();
 }
 

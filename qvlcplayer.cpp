@@ -126,6 +126,11 @@ int QVlcPlayer::currentIndex() const
     return m_index;
 }
 
+void QVlcPlayer::removeMediaAt(int index)
+{
+    m_playlist.removeAt(index);
+}
+
 libvlc_state_t QVlcPlayer::currentState() const
 {
     return m_media_state;
@@ -136,3 +141,12 @@ libvlc_time_t QVlcPlayer::currentDuration() const
     return m_duration;
 }
 
+void QVlcPlayer::seekPrev(int delta){
+    int position=m_duration*m_position;
+    setPosition(position-delta);
+
+}void QVlcPlayer::seekNext(int delta){
+    int position=m_duration*m_position;
+    setPosition(position+delta);
+
+}
